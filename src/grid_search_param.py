@@ -16,7 +16,7 @@ def find_best_detection_params():
 
     param_grid = {'MODEL_CONF_THR': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
                   'NMS_THR': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-                  'inference_image_size': [608, 640, 672, 704, 736, 768, 800, 832, 864, 896, 928, 960, 992, 1024]}
+                  'inference_image_size': [608, 672, 736, 800, 864, 928, 992]} # from 608 + 64
 
     grid = ParameterGrid(param_grid)
 
