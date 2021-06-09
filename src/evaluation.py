@@ -22,8 +22,7 @@ def get_all_files_in_folder(folder, types):
 
 def get_detections_yolo4(images_source_dir, images_ext, txt_result_dir, inference_image_size, LABELS_FILE, CONFIG_FILE,
                          WEIGHTS_FILE,
-                         MODEL_CONF_THR=0.5, NMS_THR=0.5,
-                         NMS_SCORE_THR=0.5):
+                         MODEL_CONF_THR=0.5, NMS_THR=0.5):
     np.random.seed(4)
 
     # get model
@@ -86,7 +85,7 @@ def get_detections_yolo4(images_source_dir, images_ext, txt_result_dir, inferenc
 
         # apply non-maxima suppression to suppress weak, overlapping bounding
         # boxes
-        idxs = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=NMS_SCORE_THR, nms_threshold=NMS_THR)
+        idxs = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=MODEL_CONF_THR, nms_threshold=NMS_THR)
 
         # ensure at least one detection exists
         txt_detection_result = []
@@ -216,6 +215,8 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
 
         print("\nImages saved!")
 
+    return average_precision
+
 
 def inference_and_create_txt_detections():
     # get inference + detection bboxes
@@ -225,7 +226,6 @@ def inference_and_create_txt_detections():
 
     MODEL_CONF_THR = 0.5
     NMS_THR = 0.5
-    NMS_SCORE_THR = 0.5
 
     inference_image_size = 1024
 
@@ -241,8 +241,7 @@ def inference_and_create_txt_detections():
                          CONFIG_FILE=CONFIG_FILE,
                          WEIGHTS_FILE=WEIGHTS_FILE,
                          MODEL_CONF_THR=MODEL_CONF_THR,
-                         NMS_THR=NMS_THR,
-                         NMS_SCORE_THR=NMS_SCORE_THR)
+                         NMS_THR=NMS_THR)
 
 
 def eval():
