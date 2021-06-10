@@ -1,14 +1,14 @@
 from sklearn.model_selection import ParameterGrid
 from pathlib import Path
-from evaluation import *
+from evaluate_model import *
 from datetime import datetime
 import json
 
 
 def find_best_detection_params():
-    images_source_dir = Path('data/images/source')
+    images_source_dir = Path('data/evaluate_model/images/source')
     images_ext = ['*.jpg']
-    txt_result_dir = Path('data/txt/detections')
+    txt_result_dir = Path('data/evaluate_model/txt/detections')
 
     LABELS_FILE = 'model/yolo4/obj.names'
     CONFIG_FILE = 'model/yolo4/yolov4-obj-mycustom.cfg'

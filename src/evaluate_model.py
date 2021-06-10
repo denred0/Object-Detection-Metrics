@@ -1,15 +1,17 @@
+import shutil
+
 from pathlib import Path
 from lib.Evaluator import *
 from utils import get_all_files_in_folder
-from detection import get_detections_yolo4
-from get_bboxes import getBoundingBoxes
+from model_get_detection import get_detections_yolo4
+from get_bboxes_from_txt import getBoundingBoxes
 
 
 def inference_and_create_txt_detections():
     # get inference + detection bboxes
-    images_source_dir = Path('data/images/source')
+    images_source_dir = Path('data/evaluate_model/images/source')
     images_ext = ['*.jpg']
-    txt_result_dir = Path('data/txt/detections')
+    txt_result_dir = Path('data/evaluate_model/txt/detections')
 
     MODEL_CONF_THR = 0.2
     NMS_THR = 0.5
@@ -33,12 +35,12 @@ def inference_and_create_txt_detections():
 
 def eval():
     # evaluation
-    groundtruths_dir = Path('data/txt/groundtruths')
-    detections_dir = Path('data/txt/detections')
-    images_source_dir = Path('data/images/source')
+    groundtruths_dir = Path('data/evaluate_model/txt/groundtruths')
+    detections_dir = Path('data/evaluate_model/txt/detections')
+    images_source_dir = Path('data/evaluate_model/images/source')
     images_ext = ['*.jpg']
-    images_draw_path = Path('data/images/images_result_bboxes')
-    image_size = 1024
+    images_draw_path = Path('data/evaluate_model/images/eval_draw_bboxes')
+    image_size = [1024, 1024]
     evaluate(groundtruths_dir=groundtruths_dir,
              detections_dir=detections_dir,
              image_size=image_size,
@@ -51,8 +53,13 @@ def eval():
 def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, images_ext, images_draw_path,
              draw_images=False, IOUThreshold=0.3):
     # collect bboxes for evaluation
-    allBoundingBoxes = getBoundingBoxes(groundtruths_dir=groundtruths_dir, detections_dir=detections_dir,
-                                        image_size=image_size)
+
+    allBoundingBoxes = BoundingBoxes()
+    gtBoundingBoxes = getBoundingBoxes(txt_dir=groundtruths_dir, image_size=image_size, groundtruth=True)
+    allBoundingBoxes._boundingBoxes.extend(gtBoundingBoxes._boundingBoxes)
+
+    detBoundingBoxes = getBoundingBoxes(txt_dir=detections_dir, image_size=image_size, groundtruth=False)
+    allBoundingBoxes._boundingBoxes.extend(detBoundingBoxes._boundingBoxes)
 
     # Create an evaluator object in order to obtain the metrics
     evaluator = Evaluator()
@@ -77,6 +84,12 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
         # print('%s: %f' % (c, average_precision))
 
     if draw_images:
+        # recreate folder
+        dirpath = Path(images_draw_path)
+        if dirpath.exists() and dirpath.is_dir():
+            shutil.rmtree(dirpath)
+        Path(dirpath).mkdir(parents=True, exist_ok=True)
+
         files = get_all_files_in_folder(images_source_dir, images_ext)
 
         for file in files:
@@ -105,5 +118,5 @@ if __name__ == '__main__':
     # 4. Execute inference_and_create_txt_detections(). As a result txt files in data/txt/detections folder will be created.
     # 5. Execute eval().
 
-    inference_and_create_txt_detections()
+    # inference_and_create_txt_detections()
     eval()
