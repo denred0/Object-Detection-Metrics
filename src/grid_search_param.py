@@ -14,9 +14,16 @@ def find_best_detection_params():
     CONFIG_FILE = 'model/yolo4/yolov4-obj-mycustom.cfg'
     WEIGHTS_FILE = 'model/yolo4/yolov4-obj-mycustom_best.weights'
 
-    param_grid = {'MODEL_CONF_THR': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-                  'NMS_THR': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7],
-                  'inference_image_size': [608, 672, 736, 800, 864, 928, 992]}  # from 608 + 64
+    groundtruths_dir = Path('data/evaluate_model/txt/groundtruths')
+    detections_dir = Path('data/evaluate_model/txt/detections')
+    images_source_dir = Path('data/evaluate_model/images/source')
+    images_ext = ['*.jpg']
+    images_draw_path = Path('data/evaluate_model/images/eval_draw_bboxes')
+    image_size = [1024, 1024]
+
+    param_grid = {'MODEL_CONF_THR': [0.2, 0.22, 0.24, 0.26, 0.28],
+                  'NMS_THR': [0.5, 0.52, 0.54, 0.56, 0.58],
+                  'inference_image_size': [704, 736, 768]}  # from 608 + 64
 
     grid = ParameterGrid(param_grid)
 
@@ -36,12 +43,6 @@ def find_best_detection_params():
                              MODEL_CONF_THR=params['MODEL_CONF_THR'],
                              NMS_THR=params['NMS_THR'])
 
-        groundtruths_dir = Path('data/txt/groundtruths')
-        detections_dir = Path('data/txt/detections')
-        images_source_dir = Path('data/images/source')
-        images_ext = ['*.jpg']
-        images_draw_path = Path('data/images/images_result_bboxes')
-        image_size = 1024
         mAP = evaluate(groundtruths_dir=groundtruths_dir,
                        detections_dir=detections_dir,
                        image_size=image_size,

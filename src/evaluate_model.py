@@ -13,7 +13,7 @@ def inference_and_create_txt_detections():
     images_ext = ['*.jpg']
     txt_result_dir = Path('data/evaluate_model/txt/detections')
 
-    MODEL_CONF_THR = 0.2
+    MODEL_CONF_THR = 0.25
     NMS_THR = 0.5
 
     inference_image_size = 736
@@ -67,6 +67,7 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
     metricsPerClass = evaluator.GetPascalVOCMetrics(allBoundingBoxes, IOUThreshold)
     print("Metrics per class:")
     # Loop through classes to obtain their metrics
+    average_precision = 0
     for mc in metricsPerClass:
         # Get metric values per each class
         c = mc['class']
@@ -77,9 +78,9 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
         irec = mc['interpolated recall']
         # Print AP per class
         print('Class:', c)
-        print('Precision:', round(np.mean(precision), 3))
-        print('Recall:', round(np.mean(recall), 3))
-        print('Average Precision (AP):', round(average_precision, 3))
+        print('Precision:', round(np.mean(precision), 4))
+        print('Recall:', round(np.mean(recall), 4))
+        print('Average Precision (AP):', round(average_precision, 4))
         print()
         # print('%s: %f' % (c, average_precision))
 
@@ -118,5 +119,5 @@ if __name__ == '__main__':
     # 4. Execute inference_and_create_txt_detections(). As a result txt files in data/txt/detections folder will be created.
     # 5. Execute eval().
 
-    # inference_and_create_txt_detections()
+    inference_and_create_txt_detections()
     eval()

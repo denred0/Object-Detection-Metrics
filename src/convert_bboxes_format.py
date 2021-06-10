@@ -6,7 +6,8 @@ from numpy import loadtxt
 from tqdm import tqdm
 
 
-def convert_bboxes_format(input_txt_dir, output_txt_dir, input_format, output_format, image_size_wh=[1024, 1024],
+def convert_bboxes_format(input_txt_dir, output_txt_dir, input_format, output_format, one_class=None,
+                          image_size_wh=[1024, 1024],
                           txt_ext=None,
                           delimiter_source_txt=' '):
     if txt_ext is None:
@@ -47,11 +48,14 @@ def convert_bboxes_format(input_txt_dir, output_txt_dir, input_format, output_fo
                         x = abs(int(item[1] * image_size_wh[0] - width / 2))
                         y = abs(int(item[2] * image_size_wh[1] - height / 2))
 
-                        # label = 0
-                        if item[0].is_integer():
-                            label = int(item[0])
+                        if one_class:
+                            label = one_class
                         else:
-                            label = item[0]
+                            if item[0].is_integer():
+                                label = int(item[0])
+                            else:
+                                label = item[0]
+
                         rec = str(label) + ' ' + str(x) + ' ' + str(y) + ' ' + str(width) + ' ' + str(height)
                         f.write("%s\n" % rec)
 
