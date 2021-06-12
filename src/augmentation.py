@@ -29,6 +29,8 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
         filename = image_path.stem
         # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+        # if filename == '1a27d60cc0d7729fff321a53862908b6bfae1953b47b726386db7c2e92fd9d10':
+        #     print()
         bboxes = []
         class_labels = []
         lines = loadtxt(str(os.path.join(image_path.parent, filename + '.txt')), delimiter=' ', unpack=False)
@@ -36,9 +38,11 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
             lines = [lines]
         for line in lines:
             if label_type == 'yolo':
-                decrease_value = 0.99  # because albumentation generates bbox values grater than 1
 
-                raw = [abs(float(line[1] * decrease_value)), abs(float(line[2] * decrease_value)),
+
+                decrease_value = 0.999  # because albumentation generates bbox values grater than 1
+
+                raw = [line[1] * decrease_value, line[2] * decrease_value,
                        line[3] * decrease_value, line[4] * decrease_value]
                 bboxes.append(raw)
 
@@ -53,6 +57,9 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
         transformed_bboxes = transformed['bboxes']
         transformed_class_labels = transformed['class_labels']
 
+        # if len(transformed_bboxes) == 1:
+        #     transformed_bboxes = [transformed_bboxes]
+
         with open(os.path.join(data_aug_dir, image_path.stem + '.txt'), 'w') as f:
             for i, bbox in enumerate(transformed_bboxes):
                 if label_type == 'yolo':
@@ -61,8 +68,6 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
                     f.write("%s\n" % raw)
 
         cv2.imwrite(os.path.join(data_aug_dir, image_path.name), transformed_image)
-
-        # print()
 
 
 if __name__ == '__main__':

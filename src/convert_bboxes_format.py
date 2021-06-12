@@ -31,6 +31,9 @@ def convert_bboxes_format(input_txt_dir, output_txt_dir, input_format, output_fo
                 if lines.shape.__len__() == 1:
                     lines = [lines]
 
+                if ind==344:
+                    print()
+
                 with open(Path(output_txt_dir).joinpath(txt.name), 'w') as f:
                     for item in lines:
                         # print(filename)
