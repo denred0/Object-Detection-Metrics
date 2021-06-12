@@ -18,7 +18,7 @@ transform = A.Compose([
         A.Blur(blur_limit=3, p=1.0),
         A.MedianBlur(blur_limit=3, p=1.0),
         A.MotionBlur(p=1.0)], p=0.5),
-], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels']), p=1.0)
+], bbox_params=A.BboxParams(format='yolo', min_visibility=0.1, label_fields=['class_labels']), p=1.0)
 
 
 def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, image_size):
@@ -63,6 +63,7 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
             for i, bbox in enumerate(transformed_bboxes):
                 if label_type == 'yolo':
                     label = transformed_class_labels[i]
+
                     raw = str(label) + ' ' + str(bbox[0]) + ' ' + str(bbox[1]) + ' ' + str(bbox[2]) + ' ' + str(bbox[3])
                     f.write("%s\n" % raw)
 
