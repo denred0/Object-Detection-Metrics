@@ -39,7 +39,6 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
         for line in lines:
             if label_type == 'yolo':
 
-
                 decrease_value = 0.999  # because albumentation generates bbox values grater than 1
 
                 raw = [line[1] * decrease_value, line[2] * decrease_value,
@@ -60,14 +59,14 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
         # if len(transformed_bboxes) == 1:
         #     transformed_bboxes = [transformed_bboxes]
 
-        with open(os.path.join(data_aug_dir, image_path.stem + '.txt'), 'w') as f:
+        with open(os.path.join(data_aug_dir, 'aug_' + image_path.stem + '.txt'), 'w') as f:
             for i, bbox in enumerate(transformed_bboxes):
                 if label_type == 'yolo':
                     label = transformed_class_labels[i]
                     raw = str(label) + ' ' + str(bbox[0]) + ' ' + str(bbox[1]) + ' ' + str(bbox[2]) + ' ' + str(bbox[3])
                     f.write("%s\n" % raw)
 
-        cv2.imwrite(os.path.join(data_aug_dir, image_path.name), transformed_image)
+        cv2.imwrite(os.path.join(data_aug_dir, 'aug_' + image_path.name), transformed_image)
 
 
 if __name__ == '__main__':
