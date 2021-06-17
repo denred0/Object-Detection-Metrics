@@ -12,13 +12,13 @@ transform = A.Compose([
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
     A.Transpose(p=0.5),
-    A.Rotate(limit=35, p=0.5),
+    # A.Rotate(limit=35, p=0.5),
     A.RandomBrightnessContrast(p=0.5),
     A.OneOf([
         A.Blur(blur_limit=3, p=1.0),
         A.MedianBlur(blur_limit=3, p=1.0),
         A.MotionBlur(p=1.0)], p=0.5),
-], bbox_params=A.BboxParams(format='yolo', min_visibility=0.1, label_fields=['class_labels']), p=1.0)
+], bbox_params=A.BboxParams(format='yolo', min_visibility=0, label_fields=['class_labels']), p=1.0)
 
 
 def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, image_size):
