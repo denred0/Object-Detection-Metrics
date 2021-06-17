@@ -39,7 +39,7 @@ def create_augmentations(data_source_dir, label_type, data_aug_dir, images_ext, 
         for line in lines:
             if label_type == 'yolo':
 
-                decrease_value = 0.999  # because albumentation generates bbox values grater than 1
+                decrease_value = 0.999  # because albumentation generates bbox values greater than 1
 
                 raw = [line[1] * decrease_value, line[2] * decrease_value,
                        line[3] * decrease_value, line[4] * decrease_value]

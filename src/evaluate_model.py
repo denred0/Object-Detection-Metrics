@@ -93,6 +93,10 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
         print('Recall:', round(np.mean(recall), 4))
         print('FP rate:',  round((total_fp) / total_positivies, 4))
         print('Average Precision (AP):', round(average_precision, 4))
+        print('total TP', total_tp)
+        print('total FP', total_fp)
+        print('interpolated precision', round(np.mean(ipre), 4))
+        print('interpolated recall', round(np.mean(irec), 4))
         print()
         # print('%s: %f' % (c, average_precision))
 
