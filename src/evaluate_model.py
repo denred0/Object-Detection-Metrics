@@ -7,30 +7,38 @@ from model_get_detection import get_detections_yolo4
 from get_bboxes_from_txt import getBoundingBoxes
 
 
-def inference_and_create_txt_detections():
-    # get inference + detection bboxes
+def inference_and_create_txt_detections(type):
+    # clear folder
+    txt_result_dir = Path('data/evaluate_model/txt/detections')
+    dirpath = txt_result_dir
+    if dirpath.exists() and dirpath.is_dir():
+        shutil.rmtree(dirpath)
+    Path(dirpath).mkdir(parents=True, exist_ok=True)
+
     images_source_dir = Path('data/evaluate_model/images/source')
     images_ext = ['*.jpg']
-    txt_result_dir = Path('data/evaluate_model/txt/detections')
 
-    MODEL_CONF_THR = 0.25
-    NMS_THR = 0.5
+    if type == 'yolo':
+        # get inference + detection bboxes
 
-    inference_image_size = 736
+        MODEL_CONF_THR = 0.25
+        NMS_THR = 0.5
 
-    LABELS_FILE = 'model/yolo4/obj.names'
-    CONFIG_FILE = 'model/yolo4/yolov4-obj-mycustom.cfg'
-    WEIGHTS_FILE = 'model/yolo4/yolov4-obj-mycustom_best.weights'
+        inference_image_size = 736
 
-    get_detections_yolo4(images_source_dir=images_source_dir,
-                         images_ext=images_ext,
-                         txt_result_dir=txt_result_dir,
-                         inference_image_size=inference_image_size,
-                         LABELS_FILE=LABELS_FILE,
-                         CONFIG_FILE=CONFIG_FILE,
-                         WEIGHTS_FILE=WEIGHTS_FILE,
-                         MODEL_CONF_THR=MODEL_CONF_THR,
-                         NMS_THR=NMS_THR)
+        LABELS_FILE = 'model/yolo4/obj.names'
+        CONFIG_FILE = 'model/yolo4/yolov4-obj-mycustom.cfg'
+        WEIGHTS_FILE = 'model/yolo4/yolov4-obj-mycustom_best.weights'
+
+        get_detections_yolo4(images_source_dir=images_source_dir,
+                             images_ext=images_ext,
+                             txt_result_dir=txt_result_dir,
+                             inference_image_size=inference_image_size,
+                             LABELS_FILE=LABELS_FILE,
+                             CONFIG_FILE=CONFIG_FILE,
+                             WEIGHTS_FILE=WEIGHTS_FILE,
+                             MODEL_CONF_THR=MODEL_CONF_THR,
+                             NMS_THR=NMS_THR)
 
 
 def eval():
@@ -73,6 +81,9 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
         c = mc['class']
         precision = mc['precision']
         recall = mc['recall']
+        total_positivies = mc['total positives']
+        total_tp = mc['total TP']
+        total_fp = mc['total FP']
         average_precision = mc['AP']
         ipre = mc['interpolated precision']
         irec = mc['interpolated recall']
@@ -80,6 +91,7 @@ def evaluate(groundtruths_dir, detections_dir, image_size, images_source_dir, im
         print('Class:', c)
         print('Precision:', round(np.mean(precision), 4))
         print('Recall:', round(np.mean(recall), 4))
+        print('FP rate:',  round((total_fp) / total_positivies, 4))
         print('Average Precision (AP):', round(average_precision, 4))
         print()
         # print('%s: %f' % (c, average_precision))
@@ -119,5 +131,7 @@ if __name__ == '__main__':
     # 4. Execute inference_and_create_txt_detections(). As a result txt files in data/txt/detections folder will be created.
     # 5. Execute eval().
 
-    inference_and_create_txt_detections()
+    # type = 'yolo'
+    # inference_and_create_txt_detections(type=type)
+
     eval()
