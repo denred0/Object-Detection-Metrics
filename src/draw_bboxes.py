@@ -54,7 +54,7 @@ if __name__ == '__main__':
     label_format = 'yolo'
 
     txt_ext = ['*.txt']
-    img_ext = ['*.jpg']
+    img_ext = ['*.png']
     image_size_wh = [1024, 1024]
 
     draw_bboxes(images_dir=images_dir,
