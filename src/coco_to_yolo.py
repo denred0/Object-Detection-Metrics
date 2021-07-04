@@ -65,6 +65,11 @@ def csv_to_yolo():
         shutil.rmtree(dirpath)
     Path(dirpath).mkdir(parents=True, exist_ok=True)
 
+    dirpath = Path('data/coco_to_yolo/output/images_resized')
+    if dirpath.exists() and dirpath.is_dir():
+        shutil.rmtree(dirpath)
+    Path(dirpath).mkdir(parents=True, exist_ok=True)
+
     data = pd.read_csv('data/coco_to_yolo/output/annotations.csv')
 
     images = list(data['image_name'])
@@ -101,60 +106,75 @@ def csv_to_yolo():
                 x2 = int(bbox_val[2])
                 y2 = int(bbox_val[3])
 
-                if x2 > x1 and y2 > y1:
-                    color = list(np.random.random(size=3) * 256)
-                    cv2.rectangle(image_draw, (x1, y1), (x2, y2), color, 2)
-                    cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x1 + 5, y1 + 25),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                                cv2.LINE_AA)
+                color = list(np.random.random(size=3) * 256)
+                cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x1 + 5, y1 + 25),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
+                            cv2.LINE_AA)
+                cv2.rectangle(image_draw, (x1, y1), (x1 + x2, y1 + y2), color, 2)
 
-                    x_center = ((x2 - x1) / 2 + x1) / width
-                    y_center = ((y2 - y1) / 2 + y1) / height
+                x_center = (x1 + x2 / 2) / width
+                y_center = (y1 + y2 / 2) / height
 
-                    w = (x2 - x1) / width
-                    h = (y2 - y1) / height
+                w = (x1 + x2) / width
+                h = (y1 + y2) / height
 
-                    bboxes_total.append([cl, x_center, y_center, w, h])
-                    image_classes.append(cl_name)
-                    classes_dict[cl_name] += 1
+                bboxes_total.append([cl, x_center, y_center, w, h])
 
-                elif x1 > x2 and y1 > y2:
-                    color = list(np.random.random(size=3) * 256)
-                    cv2.rectangle(image_draw, (x2, y2), (x1, y1), color, 2)
-                    cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x2 + 5, y2 + 25),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                                cv2.LINE_AA)
 
-                    x_center = ((x1 - x2) / 2 + x2) / width
-                    y_center = ((y2 - y1) / 2 + y2) / height
-
-                    w = (x1 - x2) / width
-                    h = (y1 - y2) / height
-
-                    bboxes_total.append([cl, x_center, y_center, w, h])
-                    image_classes.append(cl_name)
-
-                    classes_dict[cl_name] += 1
-                else:
-                    color = list(np.random.random(size=3) * 256)
-                    cv2.putText(image_draw, str(bbox), (int(width / 2), int(height / 2)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                                cv2.LINE_AA)
-                    breaked += 1
+                # if x2 > x1 and y2 > y1:
+                #     color = list(np.random.random(size=3) * 256)
+                #     cv2.rectangle(image_draw, (x1, y1), (x2, y2), color, 2)
+                #     cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x1 + 5, y1 + 25),
+                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
+                #                 cv2.LINE_AA)
+                #
+                #     x_center = ((x2 - x1) / 2 + x1) / width
+                #     y_center = ((y2 - y1) / 2 + y1) / height
+                #
+                #     w = (x2 - x1) / width
+                #     h = (y2 - y1) / height
+                #
+                #     bboxes_total.append([cl, x_center, y_center, w, h])
+                #     image_classes.append(cl_name)
+                #     classes_dict[cl_name] += 1
+                #
+                # elif x1 > x2 and y1 > y2:
+                #     color = list(np.random.random(size=3) * 256)
+                #     cv2.rectangle(image_draw, (x2, y2), (x1, y1), color, 2)
+                #     cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x2 + 5, y2 + 25),
+                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
+                #                 cv2.LINE_AA)
+                #
+                #     x_center = ((x1 - x2) / 2 + x2) / width
+                #     y_center = ((y2 - y1) / 2 + y2) / height
+                #
+                #     w = (x1 - x2) / width
+                #     h = (y1 - y2) / height
+                #
+                #     bboxes_total.append([cl, x_center, y_center, w, h])
+                #     image_classes.append(cl_name)
+                #
+                #     classes_dict[cl_name] += 1
+                # else:
+                #     color = list(np.random.random(size=3) * 256)
+                #     cv2.putText(image_draw, str(bbox), (int(width / 2), int(height / 2)),
+                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
+                #                 cv2.LINE_AA)
+                #     breaked += 1
 
         if len(bboxes_total) != 0:
-            limit_exceed = 0
-            for cl in image_classes:
-                if classes_dict[cl] > samples_per_class_limit:
-                    limit_exceed += 1
-            if limit_exceed < len(image_classes):
-                shutil.copy('data/coco_to_yolo/input/images/' + image, 'data/coco_to_yolo/output/images_txt_yolo')
-                with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + filename + '.txt', "a") as myfile:
-                    for box in bboxes_total:
-                        mystring = str(box[0]) + ' ' + str(box[1]) + ' ' + str(box[2]) + ' ' + str(box[3]) + ' ' + str(
-                            box[4])
-                        myfile.write(mystring)
-                        myfile.write("\n")
+            # limit_exceed = 0
+            # for cl in image_classes:
+            #     if classes_dict[cl] > samples_per_class_limit:
+            #         limit_exceed += 1
+            # if limit_exceed < len(image_classes):
+            shutil.copy('data/coco_to_yolo/input/images/' + image, 'data/coco_to_yolo/output/images_txt_yolo')
+            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + filename + '.txt', "a") as myfile:
+                for box in bboxes_total:
+                    mystring = str(box[0]) + ' ' + str(box[1]) + ' ' + str(box[2]) + ' ' + str(box[3]) + ' ' + str(
+                        box[4])
+                    myfile.write(mystring)
+                    myfile.write("\n")
 
         cv2.imwrite('data/coco_to_yolo/output/images_draw_bboxes' + '/' + image, image_draw)
 
@@ -169,5 +189,5 @@ def dataset_analyze():
 
 if __name__ == '__main__':
     # coco_to_csv()
-    # csv_to_yolo()
-    dataset_analyze()
+    csv_to_yolo()
+    # dataset_analyze()
