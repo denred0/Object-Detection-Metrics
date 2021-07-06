@@ -25,8 +25,6 @@ for image_path, txt_path in tqdm(zip(images, txts), total=len(images)):
         lines = [lines]
 
     for line in lines:
-        # data = line.split(' ')
-
         classId = line[0]
 
         xmin = int(float(line[1]) * width - float(line[3]) * width / 2)
