@@ -1,9 +1,13 @@
 import os
 import shutil
 import numpy as np
+import pandas as pd
 
 from pathlib import Path
 from tqdm import tqdm
+from numpy import loadtxt
+
+from sklearn.model_selection import train_test_split
 
 from utils import get_all_files_in_folder
 
@@ -57,23 +61,107 @@ all_txts = get_all_files_in_folder(root_dir, ['*.txt'])
 print(f'Total images: {len(all_images)}')
 print(f'Total labels: {len(all_txts)}')
 
-for img in tqdm(all_images):
-    shutil.copy(img, root_data_jpg_dir)
+val_part = 0.18
 
-for txt in tqdm(all_txts):
-    shutil.copy(txt, root_data_txt_dir)
+straify = True
 
-val_part = 0.2
-np.random.shuffle(all_images)
-train_FileNames, val_FileNames = np.split(np.array(all_images), [int(len(all_images) * (1 - val_part))])
+if straify:
+    # add 0.05 for proper stratification
+    val_part += 0.05
 
-for name in tqdm(train_FileNames):
-    shutil.copy(name, train_dir)
-    shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), train_dir)
+    # collect all classes
+    labels = []
+    images_list = []
+    for txt in tqdm(all_txts):
+        lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+        if not isinstance(lines[0], list):
+            lines = [lines]
 
-for name in tqdm(val_FileNames):
-    shutil.copy(name, test_dir)
-    shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), test_dir)
+        for line in lines:
+            labels.append(line[0])
+            images_list.append(txt.stem)
+
+    # classes + counts
+    labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
+
+    # stratify
+    X_train, X_test, y_train, y_test = train_test_split(images_list, labels, test_size=val_part, random_state=42,
+                                                        stratify=labels, shuffle=True)
+    # remove dublicates
+    X_train = np.unique(X_train).tolist()
+    X_test = np.unique(X_test).tolist()
+
+    # get images that exist in train and test
+    dublicates = []
+    for xtr in tqdm(X_train):
+        for xtt in X_test:
+            if xtr == xtt:
+                dublicates.append(xtr)
+
+    # delete such images from train and test
+    for dubl in dublicates:
+        X_train.remove(dubl)
+        X_test.remove(dubl)
+
+    # add dubl images in train and test with stratify
+    for i, dubl in tqdm(enumerate(dublicates)):
+        if i % int((10 - (val_part) * 10)) == 0:
+            X_test.append(dubl)
+        else:
+            X_train.append(dubl)
+
+    # copy images and txts
+    for name in tqdm(X_train):
+        shutil.copy(root_dir.joinpath(name + '.jpg'), train_dir)
+        shutil.copy(root_dir.joinpath(name + '.txt'), train_dir)
+
+    for name in tqdm(X_test):
+        shutil.copy(root_dir.joinpath(name + '.jpg'), test_dir)
+        shutil.copy(root_dir.joinpath(name + '.txt'), test_dir)
+
+    # check stratification
+    all_txt_train = get_all_files_in_folder(train_dir, ['*.txt'])
+
+    # collect train classes and compare with all classes
+    labels_train = []
+    for txt in tqdm(all_txt_train):
+        lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+        if not isinstance(lines[0], list):
+            lines = [lines]
+
+        for line in lines:
+            labels_train.append(line[0])
+
+    labels_train_dict = pd.DataFrame(labels_train, columns=["x"]).groupby('x').size().to_dict()
+
+    st = []
+    for key, value in labels_dict.items():
+        val = labels_train_dict[key] / value
+        st.append(val)
+
+        print(f'Class {key} | counts {value} | test_part {val}')
+
+    print('Train part:', np.mean(st))
+    # print('Part per classes:', st)
+
+else:
+
+    for img in tqdm(all_images):
+        shutil.copy(img, root_data_jpg_dir)
+
+    for txt in tqdm(all_txts):
+        shutil.copy(txt, root_data_txt_dir)
+
+    np.random.shuffle(all_images)
+    train_FileNames, val_FileNames = np.split(np.array(all_images), [int(len(all_images) * (1 - val_part))])
+
+    for name in tqdm(train_FileNames):
+        shutil.copy(name, train_dir)
+        shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), train_dir)
+
+    for name in tqdm(val_FileNames):
+        shutil.copy(name, test_dir)
+        shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), test_dir)
 
 generate_train_test(train_dir, 'train')
 generate_train_test(test_dir, 'test')
@@ -84,9 +172,9 @@ generate_train_test(test_dir, 'test')
 # shutil.copy('data/darknet_prepare_for_train/0_cfg/yolov4-obj-mycustom.cfg', darknet_path)
 # shutil.copy('data/darknet_prepare_for_train/0_weights/yolov4-p5.conv.232', darknet_path)
 
-os.system("/home/vid/hdd/projects/darknet/darknet detector train "
-          "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_cfg/obj.data "
-          "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_cfg/yolov4-obj-mycustom.cfg "
-          "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_weights/yolov4-p5.conv.232 -map")
+# os.system("/home/vid/hdd/projects/darknet/darknet detector train "
+#           "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_cfg/obj.data "
+#           "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_cfg/yolov4-obj-mycustom.cfg "
+#           "/home/vid/hdd/projects/PycharmProjects/Object-Detection-Metrics/data/darknet_prepare_for_train/0_weights/yolov4-p5.conv.232 -map")
 
 # ./darknet detector train my_data/obj.data my_data/yolov4-obj-mycustom.cfg my_data/yolov4-p5.conv.232 -dont_show -map
