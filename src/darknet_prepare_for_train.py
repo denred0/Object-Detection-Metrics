@@ -8,7 +8,6 @@ from tqdm import tqdm
 from numpy import loadtxt
 
 from sklearn.model_selection import train_test_split
-
 from utils import get_all_files_in_folder
 
 
@@ -61,88 +60,163 @@ all_txts = get_all_files_in_folder(root_dir, ['*.txt'])
 print(f'Total images: {len(all_images)}')
 print(f'Total labels: {len(all_txts)}')
 
-val_part = 0.18
+val_part = 0.2
 
 straify = True
 
+type = 2 # or 1
+
 if straify:
-    # add 0.05 for proper stratification
-    val_part += 0.05
 
-    # collect all classes
-    labels = []
-    images_list = []
-    for txt in tqdm(all_txts):
-        lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-        if not isinstance(lines[0], list):
-            lines = [lines]
+    if type == 1:
+        # add 0.05 for accuracy stratification
+        val_part += 0.05
 
-        for line in lines:
-            labels.append(line[0])
-            images_list.append(txt.stem)
+        # collect all classes
+        labels = []
+        images_list = []
+        for txt in tqdm(all_txts):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+            if not isinstance(lines[0], list):
+                lines = [lines]
 
-    # classes + counts
-    labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
+            for line in lines:
+                labels.append(line[0])
+                images_list.append(txt.stem)
 
-    # stratify
-    X_train, X_test, y_train, y_test = train_test_split(images_list, labels, test_size=val_part, random_state=42,
-                                                        stratify=labels, shuffle=True)
-    # remove dublicates
-    X_train = np.unique(X_train).tolist()
-    X_test = np.unique(X_test).tolist()
+        # classes + counts
+        labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
 
-    # get images that exist in train and test
-    dublicates = []
-    for xtr in tqdm(X_train):
-        for xtt in X_test:
-            if xtr == xtt:
-                dublicates.append(xtr)
+        # stratify
+        X_train, X_test, y_train, y_test = train_test_split(images_list, labels, test_size=val_part, random_state=42,
+                                                            stratify=labels, shuffle=True)
+        # remove dublicates
+        X_train = np.unique(X_train).tolist()
+        X_test = np.unique(X_test).tolist()
 
-    # delete such images from train and test
-    for dubl in dublicates:
-        X_train.remove(dubl)
-        X_test.remove(dubl)
+        # get images that exist in train and test
+        dublicates = []
+        for xtr in tqdm(X_train):
+            for xtt in X_test:
+                if xtr == xtt:
+                    dublicates.append(xtr)
 
-    # add dubl images in train and test with stratify
-    for i, dubl in tqdm(enumerate(dublicates)):
-        if i % int((10 - (val_part) * 10)) == 0:
-            X_test.append(dubl)
-        else:
-            X_train.append(dubl)
+        # delete such images from train and test
+        for dubl in dublicates:
+            X_train.remove(dubl)
+            X_test.remove(dubl)
 
-    # copy images and txts
-    for name in tqdm(X_train):
-        shutil.copy(root_dir.joinpath(name + '.jpg'), train_dir)
-        shutil.copy(root_dir.joinpath(name + '.txt'), train_dir)
+        # add dubl images in train and test with stratify
+        for i, dubl in tqdm(enumerate(dublicates)):
+            if i % int((10 - (val_part) * 10)) == 0:
+                X_test.append(dubl)
+            else:
+                X_train.append(dubl)
 
-    for name in tqdm(X_test):
-        shutil.copy(root_dir.joinpath(name + '.jpg'), test_dir)
-        shutil.copy(root_dir.joinpath(name + '.txt'), test_dir)
+        # copy images and txts
+        for name in tqdm(X_train):
+            shutil.copy(root_dir.joinpath(name + '.jpg'), train_dir)
+            shutil.copy(root_dir.joinpath(name + '.txt'), train_dir)
 
-    # check stratification
-    all_txt_train = get_all_files_in_folder(train_dir, ['*.txt'])
+        for name in tqdm(X_test):
+            shutil.copy(root_dir.joinpath(name + '.jpg'), test_dir)
+            shutil.copy(root_dir.joinpath(name + '.txt'), test_dir)
 
-    # collect train classes and compare with all classes
-    labels_train = []
-    for txt in tqdm(all_txt_train):
-        lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-        if not isinstance(lines[0], list):
-            lines = [lines]
+        # check stratification
+        all_txt_train = get_all_files_in_folder(train_dir, ['*.txt'])
 
-        for line in lines:
-            labels_train.append(line[0])
+        # collect train classes and compare with all classes
+        labels_train = []
+        for txt in tqdm(all_txt_train):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+            if not isinstance(lines[0], list):
+                lines = [lines]
 
-    labels_train_dict = pd.DataFrame(labels_train, columns=["x"]).groupby('x').size().to_dict()
+            for line in lines:
+                labels_train.append(line[0])
 
-    st = []
-    for key, value in labels_dict.items():
-        val = labels_train_dict[key] / value
-        st.append(val)
+        labels_train_dict = pd.DataFrame(labels_train, columns=["x"]).groupby('x').size().to_dict()
 
-        print(f'Class {key} | counts {value} | test_part {val}')
+        st = []
+        for key, value in labels_dict.items():
+            val = labels_train_dict[key] / value
+            st.append(val)
 
-    print('Train part:', np.mean(st))
-    # print('Part per classes:', st)
+            print(f'Class {key} | counts {value} | test_part {val}')
+
+        print('Train part:', np.mean(st))
+    else:
+        labels = []
+        images_list = []
+        for txt in tqdm(all_txts):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+            if not isinstance(lines[0], list):
+                lines = [lines]
+
+            for line in lines:
+                labels.append(line[0])
+                images_list.append(txt.stem)
+
+        # classes + counts
+        labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
+        labels_dict[-1] = 99999999
+
+        # assign to image one class - rarest class
+        x_all = []
+        labels_all = []
+        for txt in tqdm(all_txts):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+            if not isinstance(lines[0], list):
+                lines = [lines]
+
+            lab = []
+            for line in lines:
+                lab.append(line[0])
+
+            best_cat = -1
+            x_all.append(txt.stem)
+            for l in lab:
+                if labels_dict[l] < labels_dict[best_cat]:
+                    best_cat = l
+            labels_all.append(best_cat)
+
+        # stratify
+        X_train, X_test, y_train, y_test = train_test_split(x_all, labels_all, test_size=val_part, random_state=42,
+                                                            stratify=labels_all, shuffle=True)
+
+        # copy images and txts
+        for name in tqdm(X_train):
+            shutil.copy(root_dir.joinpath(name + '.jpg'), train_dir)
+            shutil.copy(root_dir.joinpath(name + '.txt'), train_dir)
+
+        for name in tqdm(X_test):
+            shutil.copy(root_dir.joinpath(name + '.jpg'), test_dir)
+            shutil.copy(root_dir.joinpath(name + '.txt'), test_dir)
+
+        # check stratification
+        all_txt_train = get_all_files_in_folder(train_dir, ['*.txt'])
+
+        # collect train classes and compare with all classes
+        labels_train = []
+        for txt in tqdm(all_txt_train):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+            if not isinstance(lines[0], list):
+                lines = [lines]
+
+            for line in lines:
+                labels_train.append(line[0])
+
+        labels_train_dict = pd.DataFrame(labels_train, columns=["x"]).groupby('x').size().to_dict()
+
+        st = []
+        labels_dict.pop(-1)
+        for key, value in labels_dict.items():
+            val = labels_train_dict[key] / value
+            st.append(val)
+
+            print(f'Class {key} | counts {value} | test_part {val}')
+
+        print('Train part:', np.mean(st))
 
 else:
 
