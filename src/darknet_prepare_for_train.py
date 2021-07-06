@@ -62,9 +62,31 @@ print(f'Total labels: {len(all_txts)}')
 
 val_part = 0.2
 
-straify = True
+labels = []
+images_list = []
+for txt in tqdm(all_txts):
+    lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
+    if not isinstance(lines[0], list):
+        lines = [lines]
 
-type = 2 # or 1
+    for line in lines:
+        labels.append(line[0])
+        images_list.append(txt.stem)
+
+# classes + counts
+labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
+all_labels = sum(labels_dict.values())
+
+labels_parts = []
+for key, value in labels_dict.items():
+    labels_parts.append(value / all_labels)
+
+straify = False
+min_part = 0.05
+if np.min(labels_parts) < min_part:
+    straify = True
+
+type = 2  # or 1
 
 if straify:
 
@@ -73,19 +95,6 @@ if straify:
         val_part += 0.05
 
         # collect all classes
-        labels = []
-        images_list = []
-        for txt in tqdm(all_txts):
-            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-            if not isinstance(lines[0], list):
-                lines = [lines]
-
-            for line in lines:
-                labels.append(line[0])
-                images_list.append(txt.stem)
-
-        # classes + counts
-        labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
 
         # stratify
         X_train, X_test, y_train, y_test = train_test_split(images_list, labels, test_size=val_part, random_state=42,
@@ -146,19 +155,6 @@ if straify:
 
         print('Train part:', np.mean(st))
     else:
-        labels = []
-        images_list = []
-        for txt in tqdm(all_txts):
-            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-            if not isinstance(lines[0], list):
-                lines = [lines]
-
-            for line in lines:
-                labels.append(line[0])
-                images_list.append(txt.stem)
-
-        # classes + counts
-        labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
         labels_dict[-1] = 99999999
 
         # assign to image one class - rarest class
