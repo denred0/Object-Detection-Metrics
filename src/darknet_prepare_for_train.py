@@ -216,22 +216,22 @@ if straify:
 
 else:
 
-    for img in tqdm(all_images):
-        shutil.copy(img, root_data_jpg_dir)
-
-    for txt in tqdm(all_txts):
-        shutil.copy(txt, root_data_txt_dir)
+    # for img in tqdm(all_images):
+    #     shutil.copy(img, root_data_jpg_dir)
+    #
+    # for txt in tqdm(all_txts):
+    #     shutil.copy(txt, root_data_txt_dir)
 
     np.random.shuffle(all_images)
     train_FileNames, val_FileNames = np.split(np.array(all_images), [int(len(all_images) * (1 - val_part))])
 
     for name in tqdm(train_FileNames):
         shutil.copy(name, train_dir)
-        shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), train_dir)
+        shutil.copy(root_dir.joinpath(name.stem + '.txt'), train_dir)
 
     for name in tqdm(val_FileNames):
         shutil.copy(name, test_dir)
-        shutil.copy(root_data_txt_dir.joinpath(name.stem + '.txt'), test_dir)
+        shutil.copy(root_dir.joinpath(name.stem + '.txt'), test_dir)
 
 generate_train_test(train_dir, 'train')
 generate_train_test(test_dir, 'test')
