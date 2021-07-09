@@ -103,22 +103,22 @@ def csv_to_yolo():
 
                 x1 = int(bbox_val[0])
                 y1 = int(bbox_val[1])
-                x2 = int(bbox_val[2])
-                y2 = int(bbox_val[3])
+                w = int(bbox_val[2])
+                h = int(bbox_val[3])
 
                 color = list(np.random.random(size=3) * 256)
                 cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x1 + 5, y1 + 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
                             cv2.LINE_AA)
-                cv2.rectangle(image_draw, (x1, y1), (x1 + x2, y1 + y2), color, 2)
+                cv2.rectangle(image_draw, (x1, y1), (x1 + w, y1 + h), color, 2)
 
-                x_center = (x1 + x2 / 2) / width
-                y_center = (y1 + y2 / 2) / height
+                x_center = (x1 + w / 2) / width
+                y_center = (y1 + h / 2) / height
 
-                w = (x1 + x2) / width
-                h = (y1 + y2) / height
+                wy = w / width
+                hy = h / height
 
-                bboxes_total.append([cl, x_center, y_center, w, h])
+                bboxes_total.append([cl, x_center, y_center, wy, hy])
 
 
                 # if x2 > x1 and y2 > y1:
