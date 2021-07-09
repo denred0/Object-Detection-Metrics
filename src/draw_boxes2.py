@@ -12,7 +12,7 @@ if output_dir.exists() and output_dir.is_dir():
     shutil.rmtree(output_dir)
 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-images = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.jpg'])
+images = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.png'])
 txts = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.txt'])
 
 for image_path, txt_path in tqdm(zip(images, txts), total=len(images)):
