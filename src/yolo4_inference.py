@@ -9,7 +9,7 @@ from pathlib import Path
 # --------------------------------------------------------------------------------------------------
 # Darknet initialization
 # --------------------------------------------------------------------------------------------------
-sys.path.append('/home/vid/hdd/projects/darknet/')
+# sys.path.append('/home/vid/hdd/projects/darknet/')
 
 from my_darknet import load_network, detect_image
 

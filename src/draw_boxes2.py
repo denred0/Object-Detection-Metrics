@@ -32,6 +32,12 @@ for image_path, txt_path in tqdm(zip(images, txts), total=len(images)):
         xmax = int(float(line[1]) * width + float(line[3]) * width / 2)
         ymax = int(float(line[2]) * height + float(line[4]) * width / 2)
 
+        if image_path.stem == '0':
+            cv2.rectangle(image, (94, 62), (333, 385), (255, 0, 255), 2)
+            print('height', height)
+            print('width', width)
+
+
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 0, 255), 5)
 
     cv2.imwrite(str(output_dir.joinpath(image_path.name)), image)

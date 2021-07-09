@@ -1,1 +1,0 @@
-{"MODEL_CONF_THR": 0.2, "NMS_THR": 0.2, "inference_image_size": 608}
