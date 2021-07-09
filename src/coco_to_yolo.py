@@ -96,6 +96,8 @@ def csv_to_yolo():
         for im, bbox, width, height, cl, cl_name in zip(images, bboxes, widths, heights, classes, class_names):
             if im == image:
 
+                # if im != '':
+                #     print()
                 bbox = bbox.replace('[', '')
                 bbox = bbox.replace(']', '')
 
@@ -116,51 +118,11 @@ def csv_to_yolo():
                 y_center = (y1 + h / 2) / height
 
                 wy = w / width
+                if wy > 1: wy = 1
                 hy = h / height
+                if hy > 1: hy = 1
 
                 bboxes_total.append([cl, x_center, y_center, wy, hy])
-
-
-                # if x2 > x1 and y2 > y1:
-                #     color = list(np.random.random(size=3) * 256)
-                #     cv2.rectangle(image_draw, (x1, y1), (x2, y2), color, 2)
-                #     cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x1 + 5, y1 + 25),
-                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                #                 cv2.LINE_AA)
-                #
-                #     x_center = ((x2 - x1) / 2 + x1) / width
-                #     y_center = ((y2 - y1) / 2 + y1) / height
-                #
-                #     w = (x2 - x1) / width
-                #     h = (y2 - y1) / height
-                #
-                #     bboxes_total.append([cl, x_center, y_center, w, h])
-                #     image_classes.append(cl_name)
-                #     classes_dict[cl_name] += 1
-                #
-                # elif x1 > x2 and y1 > y2:
-                #     color = list(np.random.random(size=3) * 256)
-                #     cv2.rectangle(image_draw, (x2, y2), (x1, y1), color, 2)
-                #     cv2.putText(image_draw, translit(cl_name, 'ru', reversed=True), (x2 + 5, y2 + 25),
-                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                #                 cv2.LINE_AA)
-                #
-                #     x_center = ((x1 - x2) / 2 + x2) / width
-                #     y_center = ((y2 - y1) / 2 + y2) / height
-                #
-                #     w = (x1 - x2) / width
-                #     h = (y1 - y2) / height
-                #
-                #     bboxes_total.append([cl, x_center, y_center, w, h])
-                #     image_classes.append(cl_name)
-                #
-                #     classes_dict[cl_name] += 1
-                # else:
-                #     color = list(np.random.random(size=3) * 256)
-                #     cv2.putText(image_draw, str(bbox), (int(width / 2), int(height / 2)),
-                #                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2,
-                #                 cv2.LINE_AA)
-                #     breaked += 1
 
         if len(bboxes_total) != 0:
             # limit_exceed = 0
@@ -175,6 +137,10 @@ def csv_to_yolo():
                         box[4])
                     myfile.write(mystring)
                     myfile.write("\n")
+        else:
+            shutil.copy('data/coco_to_yolo/input/images/' + image, 'data/coco_to_yolo/output/images_txt_yolo')
+            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + filename + '.txt', "a") as myfile:
+                myfile.write("\n")
 
         cv2.imwrite('data/coco_to_yolo/output/images_draw_bboxes' + '/' + image, image_draw)
 
