@@ -12,7 +12,7 @@ if output_dir.exists() and output_dir.is_dir():
     shutil.rmtree(output_dir)
 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-images = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.png'])
+images = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.jpg'])
 txts = get_all_files_in_folder(Path('data/draw_boxes2/input'), ['*.txt'])
 
 for image_path, txt_path in tqdm(zip(images, txts), total=len(images)):
@@ -33,11 +33,11 @@ for image_path, txt_path in tqdm(zip(images, txts), total=len(images)):
         ymax = int(float(line[2]) * height + float(line[4]) * width / 2)
 
         if image_path.stem == '0':
-            cv2.rectangle(image, (94, 62), (333, 385), (255, 0, 255), 2)
+            cv2.rectangle(image, (94, 62), (333, 385), (255, 255, 255), 5)
             print('height', height)
             print('width', width)
 
 
-        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 0, 255), 5)
+        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (0, 0, 255), 2)
 
     cv2.imwrite(str(output_dir.joinpath(image_path.name)), image)
