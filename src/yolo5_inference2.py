@@ -135,11 +135,20 @@ def run(input_path, output_path):
     # Print time (inference + NMS)
     # print(f'{s}Done. ({t2 - t1:.3f}s)')
 
+def check_boxes():
+    img = cv2.imread('data/yolo5_inference/images/0.jpg', cv2.IMREAD_COLOR)
+
+    cv2.rectangle(img, (98, 61), (228, 324), (255, 0, 255), 1)
+
+    cv2.rectangle(img, (98, 44), (325, 400), (0, 255, 0), 1)
+
+    cv2.imwrite('data/yolo5_inference/images/0_0.jpg', img)
 
 if __name__ == '__main__':
     # input_path = sys.argv[1]
     # output_path = sys.argv[2]
 
-    output_path = 'predict_yolo.json'
-    input_path = 'data/yolo5_inference/images'
-    run(input_path, output_path)
+    check_boxes()
+    # output_path = 'predict_yolo.json'
+    # input_path = 'data/yolo5_inference/images'
+    # run(input_path, output_path)
