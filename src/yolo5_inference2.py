@@ -52,12 +52,12 @@ def run(input_path, output_path):
             img = img.unsqueeze(0)
 
         # Inference
-        # t1 = time_synchronized()
+        t1 = time_synchronized()
         pred = model(img, augment=True, visualize=False)[0]
 
         # Apply NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-        # t2 = time_synchronized()
+        t2 = time_synchronized()
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
@@ -114,6 +114,9 @@ def run(input_path, output_path):
 
                         results_output.append(box_result)
 
+        # Print time (inference + NMS)
+        print(f'{s}Done. ({t2 - t1:.3f}s)')
+
                         # if save_img or save_crop or view_img:  # Add bbox to image
                         #     c = int(cls)  # integer class
                         #     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
@@ -132,14 +135,22 @@ def run(input_path, output_path):
         fp.write(json.dumps(results_output))
 
     print('\n' + json.dumps(results_output))
-    # Print time (inference + NMS)
-    # print(f'{s}Done. ({t2 - t1:.3f}s)')
 
+
+def check_boxes():
+    img = cv2.imread('data/yolo5_inference/images/0.jpg', cv2.IMREAD_COLOR)
+
+    cv2.rectangle(img, (98, 61), (228, 324), (255, 0, 255), 1)
+
+    cv2.rectangle(img, (98, 44), (325, 400), (0, 255, 0), 1)
+
+    cv2.imwrite('data/yolo5_inference/images/0_0.jpg', img)
 
 if __name__ == '__main__':
     # input_path = sys.argv[1]
     # output_path = sys.argv[2]
 
+    # check_boxes()
     output_path = 'predict_yolo.json'
     input_path = 'data/yolo5_inference/images'
     run(input_path, output_path)
