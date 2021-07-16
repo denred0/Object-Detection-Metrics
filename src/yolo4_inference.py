@@ -15,8 +15,7 @@ from utils import get_all_files_in_folder, yolo2voc
 
 from my_darknet import load_network, detect_image
 
-
-dirpath = Path('data/yolo4_inference/result')
+dirpath = Path('data/yolo4_inference/result_images')
 if dirpath.exists() and dirpath.is_dir():
     shutil.rmtree(dirpath)
 Path(dirpath).mkdir(parents=True, exist_ok=True)
@@ -25,7 +24,7 @@ config_path = "data/yolo4_inference/cfg/yolov4-obj-mycustom.cfg"
 weight_path = "data/yolo4_inference/cfg/yolov4-obj-mycustom_last.weights"
 meta_path = "data/yolo4_inference/cfg/obj.data"
 
-threshold = .4
+threshold = .2
 hier_thresh = .5
 nms_coeff = .45
 
@@ -37,6 +36,8 @@ gt_txts = get_all_files_in_folder(Path('data/yolo4_inference/gt'), ['*.txt'])
 
 results = []
 
+thickness = 10
+
 for image in tqdm(images):
 
     imgArray = cv2.imread(str(image))
@@ -47,7 +48,7 @@ for image in tqdm(images):
 
     for detection in detections:
 
-        if float(detection[1]) > threshold:
+        if float(detection[1]) / 100 > threshold:
 
             current_class = detection[0]
             current_thresh = float(detection[1])
@@ -72,23 +73,26 @@ for image in tqdm(images):
             if ymax > imgArray.shape[0]:
                 ymax = imgArray.shape[0]
 
-            cv2.rectangle(imgArray, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 255), 2)
+            cv2.rectangle(imgArray, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 255, 255), thickness)
 
             # draw gt
             for txt in gt_txts:
-                if txt.stem==image.stem:
+                if txt.stem == image.stem:
                     preds = open(str(txt), 'r').readlines()
 
+                    # print()
+                    # print(preds)
+
                     for pred in preds:
-                        pred_arr = np.array(pred.split(' '))
+                        if pred != '\n':
+                            pred_arr = np.array(pred.split(' '))
 
-                        boxes = np.round(yolo2voc(imgArray.shape[0], imgArray.shape[1], pred_arr[1:5]))
-                        boxes = [int(x) for x in list(boxes)]
+                            boxes = np.round(yolo2voc(imgArray.shape[0], imgArray.shape[1], pred_arr[1:5]))
+                            boxes = [int(x) for x in list(boxes)]
 
-                        cv2.rectangle(imgArray, (boxes[0], boxes[1]), (boxes[2], boxes[3]), (0, 255, 0), 2)
+                            cv2.rectangle(imgArray, (boxes[0], boxes[1]), (boxes[2], boxes[3]), (0, 255, 0), thickness)
 
-
-            print(xmin, ymin, xmax, ymax)
+            # print(xmin, ymin, xmax, ymax)
 
     cv2.imwrite('data/yolo4_inference/result_images/' + image.name, imgArray)
 
