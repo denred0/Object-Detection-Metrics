@@ -76,13 +76,17 @@ for txt in tqdm(all_txts):
 # classes + counts
 labels_dict = pd.DataFrame(labels, columns=["x"]).groupby('x').size().to_dict()
 all_labels = sum(labels_dict.values())
+print('labels_dict', labels_dict)
 
 labels_parts = []
 for key, value in labels_dict.items():
     labels_parts.append(value / all_labels)
 
+print('labels_parts', labels_parts)
+print('classes ', len(labels_parts))
+
 straify = False
-min_part = 0.05
+min_part = 0.1
 if np.min(labels_parts) < min_part:
     straify = True
 
@@ -178,7 +182,7 @@ if straify:
 
         # stratify
         X_train, X_test, y_train, y_test = train_test_split(x_all, labels_all, test_size=val_part, random_state=42,
-                                                            stratify=labels_all, shuffle=True)
+                                                            shuffle=True)
 
         # copy images and txts
         for name in tqdm(X_train):

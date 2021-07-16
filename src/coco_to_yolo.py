@@ -84,17 +84,19 @@ def csv_to_yolo():
 
     breaked = 0
 
-    all_images = set(images)
+    # all_images = set(images)
+
+    all_images = get_all_files_in_folder(Path('data/coco_to_yolo/input/images'), ['*.jpg'])
 
     for image in tqdm(all_images):
-        filename, file_extension = os.path.splitext(image)
+        # filename, file_extension = os.path.splitext(image)
 
-        image_draw = cv2.imread('data/coco_to_yolo/input/images/' + image, cv2.IMREAD_COLOR)
+        image_draw = cv2.imread(str(image), cv2.IMREAD_COLOR)
 
         bboxes_total = []
         image_classes = []
         for im, bbox, width, height, cl, cl_name in zip(images, bboxes, widths, heights, classes, class_names):
-            if im == image:
+            if im == image.name:
 
                 # if im != '':
                 #     print()
@@ -130,19 +132,19 @@ def csv_to_yolo():
             #     if classes_dict[cl] > samples_per_class_limit:
             #         limit_exceed += 1
             # if limit_exceed < len(image_classes):
-            shutil.copy('data/coco_to_yolo/input/images/' + image, 'data/coco_to_yolo/output/images_txt_yolo')
-            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + filename + '.txt', "a") as myfile:
+            shutil.copy(str(image), 'data/coco_to_yolo/output/images_txt_yolo')
+            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + image.stem + '.txt', "a") as myfile:
                 for box in bboxes_total:
                     mystring = str(box[0]) + ' ' + str(box[1]) + ' ' + str(box[2]) + ' ' + str(box[3]) + ' ' + str(
                         box[4])
                     myfile.write(mystring)
                     myfile.write("\n")
         else:
-            shutil.copy('data/coco_to_yolo/input/images/' + image, 'data/coco_to_yolo/output/images_txt_yolo')
-            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + filename + '.txt', "a") as myfile:
+            shutil.copy(image, 'data/coco_to_yolo/output/images_txt_yolo')
+            with open('data/coco_to_yolo/output/images_txt_yolo' + '/' + image.stem + '.txt', "a") as myfile:
                 myfile.write("\n")
 
-        cv2.imwrite('data/coco_to_yolo/output/images_draw_bboxes' + '/' + image, image_draw)
+        cv2.imwrite('data/coco_to_yolo/output/images_draw_bboxes' + '/' + image.name, image_draw)
 
     print(breaked)
 
