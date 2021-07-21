@@ -62,7 +62,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 DATA_ROOT_PATH = 'data/effdet_inference/images'
 # img_size_init = 1024
-img_size = 768
+img_size = 896
 
 
 class DatasetRetriever(Dataset):
@@ -73,7 +73,7 @@ class DatasetRetriever(Dataset):
 
     def __getitem__(self, index: int):
         image_name = self.image_names[index]
-        image = cv2.imread(f'{DATA_ROOT_PATH}/{image_name}.png', cv2.IMREAD_COLOR)
+        image = cv2.imread(f'{DATA_ROOT_PATH}/{image_name}.jpg', cv2.IMREAD_COLOR)
         # print('index', index)
         # print('path', f'{DATA_ROOT_PATH}/{image_name}.png')
         # print('image.shape', image.shape)
@@ -103,7 +103,9 @@ def collate_fn(batch):
 def run_wbf(predictions, image_index, image_size=img_size, iou_thr=0.45, skip_box_thr=0.35, weights=None):
     boxes = [(prediction[image_index]['boxes'] / (image_size)).tolist() for prediction in predictions]
     scores = [prediction[image_index]['scores'].tolist() for prediction in predictions]
-    labels = [np.ones(prediction[image_index]['scores'].shape[0]).tolist() for prediction in predictions]
+
+    # print(predictions)
+    labels = [prediction[image_index]['labels'].tolist() for prediction in predictions]
 
     boxes, scores, labels = weighted_boxes_fusion(boxes, scores, labels, weights=None, iou_thr=iou_thr,
                                                   skip_box_thr=skip_box_thr)
@@ -126,9 +128,11 @@ def make_predictions(model, images, score_threshold=0.20):
     with torch.no_grad():
         img_size = torch.tensor([images[0].shape[-2:]] * 2, dtype=torch.float).to("cuda:0")
         det = model(images, torch.tensor([1] * images.shape[0]).float().cuda(), img_size=img_size)
+        # print(det)
         for i in range(images.shape[0]):
             boxes = det[i].detach().cpu().numpy()[:, :4]
             scores = det[i].detach().cpu().numpy()[:, 4]
+            labels = det[i].detach().cpu().numpy()[:, 5]
             indexes = np.where(scores > score_threshold)[0]
             boxes = boxes[indexes]
             boxes[:, 2] = boxes[:, 2] + boxes[:, 0]
@@ -136,13 +140,14 @@ def make_predictions(model, images, score_threshold=0.20):
             predictions.append({
                 'boxes': boxes[indexes],
                 'scores': scores[indexes],
+                'labels': labels[indexes]
             })
     return [predictions]
 
 
 def main():
     dataset = DatasetRetriever(
-        images_names=np.array([path.split('/')[-1][:-4] for path in glob(f'{DATA_ROOT_PATH}/*.png')]),
+        images_names=np.array([path.split('/')[-1][:-4] for path in glob(f'{DATA_ROOT_PATH}/*.jpg')]),
         transforms=get_valid_transforms()
     )
 
@@ -156,8 +161,8 @@ def main():
     )
 
     model = Inference(conf=f'tf_efficientdet_d6',
-                      ckpt='model/effdet/best-checkpoint-021epoch.bin',
-                      img_size=img_size, num_classes=1)
+                      ckpt='model/effdet/best-checkpoint-039epoch.bin',
+                      img_size=img_size, num_classes=41)
     model.to(device)
 
     # skip_box_thr=0.29
@@ -167,33 +172,35 @@ def main():
 
     for image_ids, images in tqdm(enumerate(data_loader)):
         predictions = make_predictions(model, images[0], score_threshold=0.2)
-        boxes, scores, labels = run_wbf(predictions, image_index=0, iou_thr=0.45, skip_box_thr=0.3)
-        print(images[1][0])
-        print(labels)
-        print(scores)
-        print(boxes)
-        img = cv2.imread(DATA_ROOT_PATH + '/' + str(images[1][0]) + '.png', cv2.IMREAD_COLOR)
+        boxes, scores, labels = run_wbf(predictions, image_index=0, iou_thr=0.1, skip_box_thr=0.2)
+        # print(images[1][0])
+        # print(labels)
+        # print(scores)
+        # print(boxes)
+        img = cv2.imread(DATA_ROOT_PATH + '/' + str(images[1][0]) + '.jpg', cv2.IMREAD_COLOR)
 
-        xray_eq = exposure.equalize_hist(img)
-        img = ((xray_eq - xray_eq.min()) * (1 / (xray_eq.max() - xray_eq.min()) * 255)).astype('uint8')
+        # xray_eq = exposure.equalize_hist(img)
+        # img = ((xray_eq - xray_eq.min()) * (1 / (xray_eq.max() - xray_eq.min()) * 255)).astype('uint8')
 
         h, w = img.shape[:2]
 
         coef_h = h / img_size
         coef_w = w / img_size
 
-        for box in boxes:
+        for score, box, label in zip(scores, boxes, labels):
             x1 = int(box[0] * coef_w)
             y1 = int(box[1] * coef_h)
             x2 = int(box[2] * coef_w)
             y2 = int(box[3] * coef_h)
 
             cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3)
+            cv2.putText(img, str(round(score, 2)), (x1 + 10, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+            cv2.putText(img, str(int(label)), (x1 + 10, y1 + 55), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
         # draw gt
         for txt in gt_txts:
             if txt.stem == str(images[1][0]):
-                print(txt.stem)
+                # print(txt.stem)
                 preds = open(str(txt), 'r').readlines()
 
                 # print()
@@ -206,15 +213,18 @@ def main():
                         boxes = np.round(yolo2voc(img.shape[0], img.shape[1], pred_arr[1:5]))
                         boxes = [int(x) for x in list(boxes)]
 
-                        print()
-                        print(txt.stem)
-                        print(boxes)
-                        cv2.rectangle(img, (boxes[0], boxes[1]), (boxes[2], boxes[3]), (0, 255, 0), 3)
+                        # print()
+                        # print(txt.stem)
+                        # print(boxes)
+                        cv2.rectangle(img, (boxes[0], boxes[1]), (boxes[2], boxes[3]), (0, 255, 0), 2)
+                        cv2.putText(img, str(int(pred_arr[0])), (boxes[0] + 40, boxes[1] + 95),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                                    (0, 255, 0), 2)
 
-        cv2.imwrite('data/effdet_inference/result/' + str(images[1][0]) + '.png', img)
+        cv2.imwrite('data/effdet_inference/result/' + str(images[1][0]) + '.jpg', img)
 
         # boxes = (boxes * coef).astype(np.int32).clip(min=0, max=1023)
-        print()
+        # print()
 
 
 if __name__ == '__main__':

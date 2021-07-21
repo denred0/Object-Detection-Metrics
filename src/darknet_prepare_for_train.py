@@ -60,7 +60,7 @@ all_txts = get_all_files_in_folder(root_dir, ['*.txt'])
 print(f'Total images: {len(all_images)}')
 print(f'Total labels: {len(all_txts)}')
 
-val_part = 0.2
+val_part = 0.1
 
 labels = []
 images_list = []
