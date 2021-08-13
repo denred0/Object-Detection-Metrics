@@ -14,11 +14,13 @@ def png_to_jpg(input_dir, output_dir):
         shutil.rmtree(dirpath)
     Path(dirpath).mkdir(parents=True, exist_ok=True)
 
-    images_paths = get_all_files_in_folder(input_dir, ['*.png'])
+    images_paths = get_all_files_in_folder(input_dir, ['*.jpg'])
 
     for image_path in tqdm(images_paths):
         image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
-        cv2.imwrite(str(output_dir.joinpath(image_path.stem + '.jpg')), image)
+        cv2.imwrite(str(output_dir.joinpath(image_path.stem + '.png')), image)
+
+
 
 
 if __name__ == '__main__':

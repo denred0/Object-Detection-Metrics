@@ -23,8 +23,8 @@ def run(input_path, output_path):
     classes = None  # filter by class: --class 0, or --class 0 2 3
     agnostic_nms = False
     max_det = 1000
-    save_dir = Path('data/yolo5_inference/result_images')
-    Path("not_found_images").mkdir(parents=True, exist_ok=True)
+    # save_dir = Path('data/yolo5_inference/result_images')
+    # Path("not_found_images").mkdir(parents=True, exist_ok=True)
 
     device = select_device('')
     model = attempt_load('model/yolo5/yolov5l6_f0.pt', map_location=device)
@@ -36,8 +36,8 @@ def run(input_path, output_path):
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
 
-    counter = 0
-    not_found = []
+    # counter = 0
+    # not_found = []
     results_output = []
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
@@ -52,15 +52,15 @@ def run(input_path, output_path):
         # Apply NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
 
-        filename = str(path).split('/')[-1]
+        # filename = str(path).split('/')[-1]
 
         paint = False
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             p, s, im0, frame = path, '', im0s.copy(), getattr(dataset, 'frame', 0)
 
-            p = Path(p)  # to Path
-            im_draw = im0.copy()
+            # p = Path(p)  # to Path
+            # im_draw = im0.copy()
 
             if len(det):
                 # Rescale boxes from img_size to im0 size
@@ -86,7 +86,7 @@ def run(input_path, output_path):
                         #             2,
                         #             cv2.LINE_AA)
 
-                        paint = True
+                        # paint = True
 
                         box_result = {}
                         box_result['image_id'] = int(p.stem)
@@ -96,71 +96,71 @@ def run(input_path, output_path):
 
                         results_output.append(box_result)
 
-        if not paint:
-            cv2.imwrite('not_found_images' + '/' + filename, im0s)
-            not_found.append(path)
+        # if not paint:
+        #     cv2.imwrite('not_found_images' + '/' + filename, im0s)
+        #     not_found.append(path)
 
-        cv2.imwrite(str(save_dir) + '/' + filename, im_draw)
+        # cv2.imwrite(str(save_dir) + '/' + filename, im_draw)
 
-    conf_thres *= 0.7
-    if len(not_found) != 0:
-        dataset_not_found = LoadImages('not_found_images', img_size=imgsz, stride=stride)
-        for path, img, im0s, vid_cap in dataset_not_found:
-            img = torch.from_numpy(img).to(device)
-            img = img.float()
-            img /= 255.0  # 0 - 255 to 0.0 - 1.0
-            if img.ndimension() == 3:
-                img = img.unsqueeze(0)
-
-                # Inference
-                pred = model(img, augment=True, visualize=False)[0]
-
-                # Apply NMS
-                pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-
-                filename = str(path).split('/')[-1]
-
-                paint = False
-                # Process detections
-                for i, det in enumerate(pred):  # detections per image
-                    p, s, im0, frame = path, '', im0s.copy(), getattr(dataset, 'frame', 0)
-
-                    p = Path(p)  # to Path
-                    im_draw = im0.copy()
-
-                    if len(det):
-                        # Rescale boxes from img_size to im0 size
-                        det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-
-                        # Write results
-                        for *xyxy, conf, cls in reversed(det):
-                            conf_n = conf.detach().cpu().numpy().item()
-                            if conf_n > conf_thres:
-                                x1 = xyxy[0].detach().cpu().numpy().item()
-                                y1 = xyxy[1].detach().cpu().numpy().item()
-                                x2 = xyxy[2].detach().cpu().numpy().item()
-                                y2 = xyxy[3].detach().cpu().numpy().item()
-
-                                # cv2.rectangle(im_draw, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 255), 3)
-                                cl = int(cls)
-                                # cv2.putText(im_draw, str(cl), (int(x1) + 10, int(y1) + 35), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                #             (255, 0, 255), 2,
-                                #             cv2.LINE_AA)
-                                # cv2.putText(im_draw, str(round(conf_n, 2)), (int(x1) + 10, int(y1) + 70),
-                                #             cv2.FONT_HERSHEY_SIMPLEX,
-                                #             1, (255, 0, 255),
-                                #             2,
-                                #             cv2.LINE_AA)
-
-                                paint = True
-
-                                box_result = {}
-                                box_result['image_id'] = int(p.stem)
-                                box_result['category_id'] = cl
-                                box_result['score'] = conf_n
-                                box_result['bbox'] = [x1, y1, (x2 - x1), (y2 - y1)]
-
-                                results_output.append(box_result)
+    # conf_thres *= 0.7
+    # if len(not_found) != 0:
+    #     dataset_not_found = LoadImages('not_found_images', img_size=imgsz, stride=stride)
+    #     for path, img, im0s, vid_cap in dataset_not_found:
+    #         img = torch.from_numpy(img).to(device)
+    #         img = img.float()
+    #         img /= 255.0  # 0 - 255 to 0.0 - 1.0
+    #         if img.ndimension() == 3:
+    #             img = img.unsqueeze(0)
+    #
+    #             # Inference
+    #             pred = model(img, augment=True, visualize=False)[0]
+    #
+    #             # Apply NMS
+    #             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
+    #
+    #             filename = str(path).split('/')[-1]
+    #
+    #             paint = False
+    #             # Process detections
+    #             for i, det in enumerate(pred):  # detections per image
+    #                 p, s, im0, frame = path, '', im0s.copy(), getattr(dataset, 'frame', 0)
+    #
+    #                 p = Path(p)  # to Path
+    #                 im_draw = im0.copy()
+    #
+    #                 if len(det):
+    #                     # Rescale boxes from img_size to im0 size
+    #                     det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+    #
+    #                     # Write results
+    #                     for *xyxy, conf, cls in reversed(det):
+    #                         conf_n = conf.detach().cpu().numpy().item()
+    #                         if conf_n > conf_thres:
+    #                             x1 = xyxy[0].detach().cpu().numpy().item()
+    #                             y1 = xyxy[1].detach().cpu().numpy().item()
+    #                             x2 = xyxy[2].detach().cpu().numpy().item()
+    #                             y2 = xyxy[3].detach().cpu().numpy().item()
+    #
+    #                             # cv2.rectangle(im_draw, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 255), 3)
+    #                             cl = int(cls)
+    #                             # cv2.putText(im_draw, str(cl), (int(x1) + 10, int(y1) + 35), cv2.FONT_HERSHEY_SIMPLEX, 1,
+    #                             #             (255, 0, 255), 2,
+    #                             #             cv2.LINE_AA)
+    #                             # cv2.putText(im_draw, str(round(conf_n, 2)), (int(x1) + 10, int(y1) + 70),
+    #                             #             cv2.FONT_HERSHEY_SIMPLEX,
+    #                             #             1, (255, 0, 255),
+    #                             #             2,
+    #                             #             cv2.LINE_AA)
+    #
+    #                             paint = True
+    #
+    #                             box_result = {}
+    #                             box_result['image_id'] = int(p.stem)
+    #                             box_result['category_id'] = cl
+    #                             box_result['score'] = conf_n
+    #                             box_result['bbox'] = [x1, y1, (x2 - x1), (y2 - y1)]
+    #
+    #                             results_output.append(box_result)
 
             # cv2.imwrite(str(save_dir) + '/' + filename, im_draw)
 
