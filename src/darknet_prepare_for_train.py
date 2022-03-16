@@ -8,7 +8,7 @@ from tqdm import tqdm
 from numpy import loadtxt
 
 from sklearn.model_selection import train_test_split
-from utils import get_all_files_in_folder
+from my_utils import get_all_files_in_folder
 
 
 def generate_train_test(data_dir, split):
@@ -16,7 +16,7 @@ def generate_train_test(data_dir, split):
 
     with open('data/darknet_prepare_for_train/' + split + '.txt', "w") as outfile:
         for image in images:
-            outfile.write('data/darknet_prepare_for_train/' + split + '/' + image.name)
+            outfile.write(split + '/' + image.name)
             outfile.write("\n")
         outfile.close()
 
@@ -24,21 +24,21 @@ def generate_train_test(data_dir, split):
 # darknet_path = Path('/home/vid/hdd/projects/darknet/my_data')
 
 root_dir = Path('data/darknet_prepare_for_train/0_dataset')
-root_data_jpg_dir = Path('data/darknet_prepare_for_train/data_jpg')
-root_data_txt_dir = Path('data/darknet_prepare_for_train/data_txt')
+# root_data_jpg_dir = Path('data/darknet_prepare_for_train/data_jpg')
+# root_data_txt_dir = Path('data/darknet_prepare_for_train/data_txt')
 train_dir = Path('data/darknet_prepare_for_train/train')
 test_dir = Path('data/darknet_prepare_for_train/test')
 backup_dir = Path('data/darknet_prepare_for_train/backup')
 
-dirpath = root_data_jpg_dir
-if dirpath.exists() and dirpath.is_dir():
-    shutil.rmtree(dirpath)
-Path(dirpath).mkdir(parents=True, exist_ok=True)
-
-dirpath = root_data_txt_dir
-if dirpath.exists() and dirpath.is_dir():
-    shutil.rmtree(dirpath)
-Path(dirpath).mkdir(parents=True, exist_ok=True)
+# dirpath = root_data_jpg_dir
+# if dirpath.exists() and dirpath.is_dir():
+#     shutil.rmtree(dirpath)
+# Path(dirpath).mkdir(parents=True, exist_ok=True)
+#
+# dirpath = root_data_txt_dir
+# if dirpath.exists() and dirpath.is_dir():
+#     shutil.rmtree(dirpath)
+# Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 dirpath = train_dir
 if dirpath.exists() and dirpath.is_dir():
@@ -60,17 +60,18 @@ all_txts = get_all_files_in_folder(root_dir, ['*.txt'])
 print(f'Total images: {len(all_images)}')
 print(f'Total labels: {len(all_txts)}')
 
-val_part = 0.1
+val_part = 0.2
 
 labels = []
 images_list = []
 for txt in tqdm(all_txts):
-    lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-    if not isinstance(lines[0], list):
+    lines = loadtxt(str(txt), delimiter=' ', unpack=False)
+    if lines.shape.__len__() == 1:
         lines = [lines]
 
     for line in lines:
-        labels.append(line[0])
+        if len(line) != 0:
+            labels.append(line[0])
         images_list.append(txt.stem)
 
 # classes + counts
@@ -165,13 +166,26 @@ if straify:
         x_all = []
         labels_all = []
         for txt in tqdm(all_txts):
-            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-            if not isinstance(lines[0], list):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False)
+
+            if lines.shape.__len__() == 1:
                 lines = [lines]
+
+            for line in lines:
+                if len(line) != 0:
+                    labels.append(line[0])
+                images_list.append(txt.stem)
+
+            # try:
+            #     if not isinstance(lines[0], list):
+            #         lines = [lines]
+            # except:
+            #     print()
 
             lab = []
             for line in lines:
-                lab.append(line[0])
+                if len(line) != 0:
+                    lab.append(line[0])
 
             best_cat = -1
             x_all.append(txt.stem)
@@ -199,12 +213,16 @@ if straify:
         # collect train classes and compare with all classes
         labels_train = []
         for txt in tqdm(all_txt_train):
-            lines = loadtxt(str(txt), delimiter=' ', unpack=False).tolist()
-            if not isinstance(lines[0], list):
+            lines = loadtxt(str(txt), delimiter=' ', unpack=False)
+            if lines.shape.__len__() == 1:
                 lines = [lines]
 
+            # if not isinstance(lines[0], list):
+            #     lines = [lines]
+
             for line in lines:
-                labels_train.append(line[0])
+                if len(line) != 0:
+                    labels_train.append(line[0])
 
         labels_train_dict = pd.DataFrame(labels_train, columns=["x"]).groupby('x').size().to_dict()
 
